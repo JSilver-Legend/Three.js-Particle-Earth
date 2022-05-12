@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<head>
+	<link href="main.css" rel="stylesheet" type='text/css'>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
+</head>
+
+<body>
+	<div class="canvas" id="canvas"></div>
+	<div class="overlay"></div>
+	<script type="module">
+
+		import * as THREE from './assets/libraries/three.module.js';
+		import { OrbitControls } from './assets/libraries/OrbitControls.js';
+		import { EffectComposer } from './assets/libraries/EffectComposer.js';
+		import { RenderPass } from './assets/libraries/RenderPass.js';
+		import { UnrealBloomPass } from './assets/libraries/UnrealBloomPass.js';
+		import { config } from './assets/libraries/config.js';
+		import { GLTFLoader } from './assets/libraries/GLTFLoader.js';
+
+		const scene = new THREE.Scene();
+		scene.background = new THREE.Color('#000000');
+
+		let renderer, camera, clock, controls, composer, cube;
+		// const geometry = new THREE.BoxGeometry(2, 2, 2);
+
+		let earthModel = './assets/model/earth.json';
+		let response = await fetch(earthModel);
+		let data = await response.json();
+
+		var smoke = new THREE.Object3D();
+		var particle = new THREE.Group();
+		var particularArr = new Array();
+		var str;
+
+		const params = {
+			exposure: 1,
+			bloomStrength: 1,
+			bloomThreshold: 0,
+			bloomRadius: 0
+		};
+
+		const materialArray = [
+			new THREE.MeshLambertMaterial({ 'color': '#ffff00' }),
+			new THREE.MeshLambertMaterial({ 'color': '#ff0000' }),
+			new THREE.MeshLambertMaterial({ 'color': '#1aff1a' }),
+			new THREE.MeshLambertMaterial({ 'color': '#00ff55' })
+		]
+
+		const radius = config.sizes.globe + config.sizes.globe * config.scale.points;
+
+
+		function mathRandom(value) {
+			var numValue = 1 + Math.random() * value;
+			return numValue;
+		};
+
+
+		new GLTFLoader().load('./assets/model/cube.glb', function (gltf) {
+			cube = gltf.scene;
+			init();
+		});
+
+
+		function init() {
+			const container = document.getElementById('canvas');
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.toneMapping = THREE.ReinhardToneMapping;
+			container.appendChild(renderer.domElement);
+
+			clock = new THREE.Clock();
+
+			camera = new THREE.PerspectiveCamera(12, window.innerWidth / window.innerHeight, 1, 2100);
+			camera.position.set(0, 0, 0);
+
+			scene.add(camera);
+
+			scene.add(new THREE.AmbientLight(0xffffff, 10));
+			const pointLight = new THREE.PointLight(0xffffff, 10);
+			scene.add(pointLight);
+			pointLight.position.set(0, 0, 0);
+
+			controls = new OrbitControls(camera, renderer.domElement);
+			controls.enableDamping = true;
+			controls.minDistance = 2050;
+			controls.maxDistance = 2050;
+			controls.target.set(0, 0, 0);
+			controls.update();
+
+			for (var i = 0; i < data.length; i++) {
+				const { x, y, z } = data[i];
+				// var currentColor = randomColor[Math.floor(Math.random() * 5)];
+				var cloneCube = cube.clone();
+				cloneCube.name = "cube" + i;
+				// const particular = new THREE.Mesh(cube, new THREE.MeshLambertMaterial(currentColor));
+				// let temp = '{ "x":' + particular.position.x + ', "y":' + particular.position.y + ', "z":' + particular.position.z + "},";
+				// str += temp;
+				// particle[i] = cloneCube;
+				cloneCube.position.set(mathRandom(2000), mathRandom(2000), mathRandom(2000));
+				console.log('cube-->', cloneCube);
+				cloneCube.children[0].material = materialArray[i % 4];
+				// cloneCube.material.color = '#ff0000';
+				cloneCube.scale.set(8, 8, 8);
+				particle.add(cloneCube);
+				// smoke.add(particular);
+				// particularArr.push(particular);
+			}
+			//console.log(str);
+
+			scene.add(particle);
+
+			const renderScene = new RenderPass(scene, camera);
+			const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+			bloomPass.threshold = params.bloomThreshold;
+			bloomPass.strength = params.bloomStrength;
+			bloomPass.radius = params.bloomRadius;
+
+			composer = new EffectComposer(renderer);
+			composer.addPass(renderScene);
+			composer.addPass(bloomPass);
+
+			sum();
+			animate();
+		}
+
+		function sum() {
+			particle.children.forEach((item, index) => {
+				const { x, y, z } = data[index];
+				gsap.to(
+					item.position, {
+					duration: 5,
+					x: x,
+					y: y,
+					z: z
+				})
+			});
+		}
+
+		function rotationCube() {
+			particle.children.forEach((item) => {
+				item.rotation.x += 0.01;
+			});
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+			const delta = clock.getDelta();
+			rotationCube();
+			controls.update();
+			composer.render();
+		}
+
+	</script>
+</body>
