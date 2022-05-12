@@ -85,9 +85,10 @@
 
 			controls = new OrbitControls(camera, renderer.domElement);
 			controls.enableDamping = true;
+			controls.enableRotate = false;
 			controls.minDistance = 2050;
 			controls.maxDistance = 2050;
-			controls.target.set(0, 0, 0);
+			controls.target.set(-80, 9.86649601661592, -181.5634585637223);
 			controls.update();
 
 			for (var i = 0; i < data.length; i++) {
@@ -123,7 +124,25 @@
 			composer.addPass(bloomPass);
 
 			sum();
+			moveCamera();
 			animate();
+		}
+
+		function moveCamera() {
+			gsap.to(
+				camera.position, {
+				duration: 3,
+				x: -152.55308077837753,
+				y: -2059.9291250424794,
+				z: -199.16495912009358
+			});
+			gsap.to(
+				camera.rotation, {
+				duration: 2,
+				x: 1.5707960729677006,
+				y: -9.672955300078898,
+				z: 1.3141729935287072
+			});
 		}
 
 		function sum() {
@@ -151,6 +170,8 @@
 			rotationCube();
 			controls.update();
 			composer.render();
+			console.log('position-->', controls.target);
+			// console.log('rotation-->', camera.rotation);
 		}
 
 	</script>
