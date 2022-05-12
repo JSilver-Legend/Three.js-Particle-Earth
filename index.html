@@ -31,6 +31,7 @@
 
 		var smoke = new THREE.Object3D();
 		var particle = new THREE.Group();
+		var spaceParticle = new THREE.Group();
 		var particularArr = new Array();
 		var str;
 
@@ -56,6 +57,11 @@
 			return numValue;
 		};
 
+		function mathRandomRange(min, max) {
+			var numValue = min + Math.random() * (max - min);
+			return numValue;
+		};
+
 
 		new GLTFLoader().load('./assets/model/cube.glb', function (gltf) {
 			cube = gltf.scene;
@@ -73,10 +79,11 @@
 
 			clock = new THREE.Clock();
 
-			camera = new THREE.PerspectiveCamera(12, window.innerWidth / window.innerHeight, 1, 2100);
-			camera.position.set(0, 0, 0);
+			camera = new THREE.PerspectiveCamera(12, window.innerWidth / window.innerHeight, 1, 3000);
 
 			scene.add(camera);
+			camera.position.set(-153, -2060, -200);
+			camera.rotation.set(1.57, -9.6, 1.3);
 
 			scene.add(new THREE.AmbientLight(0xffffff, 10));
 			const pointLight = new THREE.PointLight(0xffffff, 10);
@@ -100,7 +107,7 @@
 				// let temp = '{ "x":' + particular.position.x + ', "y":' + particular.position.y + ', "z":' + particular.position.z + "},";
 				// str += temp;
 				// particle[i] = cloneCube;
-				cloneCube.position.set(mathRandom(2000), mathRandom(2000), mathRandom(2000));
+				cloneCube.position.set(100, mathRandom(2000), mathRandom(2000));
 				console.log('cube-->', cloneCube);
 				cloneCube.children[0].material = materialArray[i % 4];
 				// cloneCube.material.color = '#ff0000';
@@ -111,6 +118,18 @@
 			}
 			//console.log(str);
 
+			for (let index = 0; index < 40; index++) {
+				var cloneCubeModel = cube.clone();
+				cloneCubeModel.name = "cubeClone" + index;
+				cloneCubeModel.position.set(mathRandomRange(-500, 500), mathRandomRange(-500, 500), mathRandomRange(-500, 500));
+				cloneCubeModel.children[0].material = materialArray[index % 4];
+				var scale = mathRandomRange(20, 70);
+				cloneCubeModel.scale.set(scale, scale, scale);
+				spaceParticle.add(cloneCubeModel);
+			}
+
+
+			scene.add(spaceParticle);
 			scene.add(particle);
 
 			const renderScene = new RenderPass(scene, camera);
@@ -124,7 +143,7 @@
 			composer.addPass(bloomPass);
 
 			sum();
-			moveCamera();
+			// moveCamera();
 			animate();
 		}
 
@@ -161,6 +180,10 @@
 		function rotationCube() {
 			particle.children.forEach((item) => {
 				item.rotation.x += 0.01;
+			});
+			spaceParticle.children.forEach((item) => {
+				item.rotation.x += 0.01;
+				item.rotation.y += 0.02;
 			});
 		}
 
