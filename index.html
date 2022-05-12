@@ -29,6 +29,10 @@
 		let response = await fetch(earthModel);
 		let data = await response.json();
 
+		let spaceModel = './assets/model/spaceParticle.json';
+		let responseParticle = await fetch(spaceModel);
+		let spaceData = await responseParticle.json();
+
 		var smoke = new THREE.Object3D();
 		var particle = new THREE.Group();
 		var spaceParticle = new THREE.Group();
@@ -108,7 +112,7 @@
 				// str += temp;
 				// particle[i] = cloneCube;
 				cloneCube.position.set(100, mathRandom(2000), mathRandom(2000));
-				console.log('cube-->', cloneCube);
+				// console.log('cube-->', cloneCube);
 				cloneCube.children[0].material = materialArray[i % 4];
 				// cloneCube.material.color = '#ff0000';
 				cloneCube.scale.set(8, 8, 8);
@@ -118,16 +122,17 @@
 			}
 			//console.log(str);
 
-			for (let index = 0; index < 40; index++) {
+			var str;
+
+			for (let index = 0; index < spaceData.length; index++) {
 				var cloneCubeModel = cube.clone();
 				cloneCubeModel.name = "cubeClone" + index;
-				cloneCubeModel.position.set(mathRandomRange(-500, 500), mathRandomRange(-500, 500), mathRandomRange(-500, 500));
+				cloneCubeModel.position.set(spaceData[index].x, spaceData[index].y, spaceData[index].z);
 				cloneCubeModel.children[0].material = materialArray[index % 4];
-				var scale = mathRandomRange(20, 70);
+				var scale = mathRandomRange(1, 40);
 				cloneCubeModel.scale.set(scale, scale, scale);
 				spaceParticle.add(cloneCubeModel);
 			}
-
 
 			scene.add(spaceParticle);
 			scene.add(particle);
@@ -193,7 +198,7 @@
 			rotationCube();
 			controls.update();
 			composer.render();
-			console.log('position-->', controls.target);
+			// console.log('position-->', controls.target);
 			// console.log('rotation-->', camera.rotation);
 		}
 
