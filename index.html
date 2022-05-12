@@ -2,6 +2,7 @@
 
 <head>
 	<link href="main.css" rel="stylesheet" type='text/css'>
+	<script src="assets/libraries/jquery.min.js"></script> <!-- jquery JS (https://jquery.com) -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
 </head>
@@ -23,12 +24,9 @@
 		scene.background = new THREE.Color('#000000');
 
 		let renderer, camera, clock, controls, composer, cube;
-		// const geometry = new THREE.BoxGeometry(2, 2, 2);
-
 		let earthModel = './assets/model/earth.json';
 		let response = await fetch(earthModel);
 		let data = await response.json();
-
 		let spaceModel = './assets/model/spaceParticle.json';
 		let responseParticle = await fetch(spaceModel);
 		let spaceData = await responseParticle.json();
@@ -36,8 +34,14 @@
 		var smoke = new THREE.Object3D();
 		var particle = new THREE.Group();
 		var spaceParticle = new THREE.Group();
-		var particularArr = new Array();
-		var str;
+		var mouse = new THREE.Vector2(), INTERSECTED;
+        var uSpeed = 5;
+        var intersected;
+
+		//camera default position
+		var default_x = -153;
+		var default_y = -2060;
+		var default_z = -200;
 
 		const params = {
 			exposure: 1,
@@ -54,9 +58,7 @@
 		]
 
 		const radius = config.sizes.globe + config.sizes.globe * config.scale.points;
-
-
-		function mathRandom(value) {
+        function mathRandom(value) {
 			var numValue = 1 + Math.random() * value;
 			return numValue;
 		};
@@ -66,8 +68,7 @@
 			return numValue;
 		};
 
-
-		new GLTFLoader().load('./assets/model/cube.glb', function (gltf) {
+        new GLTFLoader().load('./assets/model/cube.glb', function (gltf) {
 			cube = gltf.scene;
 			init();
 		});
@@ -86,7 +87,8 @@
 			camera = new THREE.PerspectiveCamera(12, window.innerWidth / window.innerHeight, 1, 3000);
 
 			scene.add(camera);
-			camera.position.set(-153, -2060, -200);
+			
+			camera.position.set(default_x, default_y, default_z);
 			camera.rotation.set(1.57, -9.6, 1.3);
 
 			scene.add(new THREE.AmbientLight(0xffffff, 10));
@@ -104,26 +106,13 @@
 
 			for (var i = 0; i < data.length; i++) {
 				const { x, y, z } = data[i];
-				// var currentColor = randomColor[Math.floor(Math.random() * 5)];
 				var cloneCube = cube.clone();
 				cloneCube.name = "cube" + i;
-				// const particular = new THREE.Mesh(cube, new THREE.MeshLambertMaterial(currentColor));
-				// let temp = '{ "x":' + particular.position.x + ', "y":' + particular.position.y + ', "z":' + particular.position.z + "},";
-				// str += temp;
-				// particle[i] = cloneCube;
 				cloneCube.position.set(100, mathRandom(2000), mathRandom(2000));
-				// console.log('cube-->', cloneCube);
 				cloneCube.children[0].material = materialArray[i % 4];
-				// cloneCube.material.color = '#ff0000';
 				cloneCube.scale.set(8, 8, 8);
 				particle.add(cloneCube);
-				// smoke.add(particular);
-				// particularArr.push(particular);
 			}
-			//console.log(str);
-
-			var str;
-
 			for (let index = 0; index < spaceData.length; index++) {
 				var cloneCubeModel = cube.clone();
 				cloneCubeModel.name = "cubeClone" + index;
@@ -133,7 +122,7 @@
 				cloneCubeModel.scale.set(scale, scale, scale);
 				spaceParticle.add(cloneCubeModel);
 			}
-
+			
 			scene.add(spaceParticle);
 			scene.add(particle);
 
@@ -148,25 +137,7 @@
 			composer.addPass(bloomPass);
 
 			sum();
-			// moveCamera();
 			animate();
-		}
-
-		function moveCamera() {
-			gsap.to(
-				camera.position, {
-				duration: 3,
-				x: -152.55308077837753,
-				y: -2059.9291250424794,
-				z: -199.16495912009358
-			});
-			gsap.to(
-				camera.rotation, {
-				duration: 2,
-				x: 1.5707960729677006,
-				y: -9.672955300078898,
-				z: 1.3141729935287072
-			});
 		}
 
 		function sum() {
@@ -191,6 +162,27 @@
 				item.rotation.y += 0.02;
 			});
 		}
+        
+		function onMouseMove(event) {
+            event.preventDefault();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+			gsap.to(
+				camera.position, {
+					duration: 4,
+					y: default_y+ mouse.y * 70
+                }
+			)
+			gsap.to(
+				controls, {
+					duration: 4,
+					minDistance:2050+mouse.x*100,
+					maxDistance:2050+mouse.x*100
+                }
+			)
+        };
+        window.addEventListener('mousemove', onMouseMove, false);
 
 		function animate() {
 			requestAnimationFrame(animate);
@@ -198,8 +190,6 @@
 			rotationCube();
 			controls.update();
 			composer.render();
-			// console.log('position-->', controls.target);
-			// console.log('rotation-->', camera.rotation);
 		}
 
 	</script>
